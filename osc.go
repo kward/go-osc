@@ -101,7 +101,8 @@ func (f HandlerFunc) HandleMessage(msg *Message) {
 // OscDispatcher is a dispatcher for OSC packets. It handles the dispatching of
 // received OSC packets.
 type OscDispatcher struct {
-	handlers map[string]Handler
+	handlers       map[string]Handler
+	defaultHandler Handler
 }
 
 // NewOscDispatcher returns an OscDispatcher.
@@ -111,6 +112,10 @@ func NewOscDispatcher() (dispatcher *OscDispatcher) {
 
 // AddMsgHandler adds a new message handler for the given OSC address.
 func (s *OscDispatcher) AddMsgHandler(address string, handler HandlerFunc) error {
+	if address == "*" {
+		s.defaultHandler = handler
+		return nil
+	}
 	for _, chr := range "*?,[]{}# " {
 		if strings.Contains(address, fmt.Sprintf("%c", chr)) {
 			return errors.New("OSC Address string may not contain any characters in \"*?,[]{}# \n")
@@ -138,6 +143,9 @@ func (s *OscDispatcher) Dispatch(packet Packet, addr net.Addr) {
 			if msg.Match(address) {
 				handler.HandleMessage(msg)
 			}
+			if s.defaultHandler != nil {
+				s.defaultHandler.HandleMessage(msg)
+			}
 		}
 
 	case *Bundle:
@@ -151,6 +159,9 @@ func (s *OscDispatcher) Dispatch(packet Packet, addr net.Addr) {
 					if message.Match(address) {
 						handler.HandleMessage(message)
 					}
+				}
+				if s.defaultHandler != nil {
+					s.defaultHandler.HandleMessage(message)
 				}
 			}
 
