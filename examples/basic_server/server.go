@@ -6,7 +6,7 @@ import (
 	"net"
 	"os"
 
-	osc "github.com/kward/go-osc"
+	"github.com/kward/go-osc/osc"
 	"golang.org/x/net/context"
 )
 

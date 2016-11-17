@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	osc "github.com/kward/go-osc"
+	"github.com/kward/go-osc/osc"
 )
 
 // TODO: Revise the client!

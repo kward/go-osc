@@ -1,6 +1,6 @@
 package main
 
-import osc "github.com/kward/go-osc"
+import "github.com/kward/go-osc/osc"
 
 func main() {
 	addr := "0.0.0.0:8000"
