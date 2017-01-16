@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kward/go-osc/osc"
+	"github.com/hypebeast/go-osc/osc"
 )
 
 // TODO: Revise the client!
 func main() {
 	ip := "localhost"
-	port := 8000
+	port := 9000
 	client := osc.NewClient(ip, port)
 
 	fmt.Println("### Welcome to go-osc transmitter demo")
