@@ -12,7 +12,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func TestAppendArguments(t *testing.T) {
+func TestMessage_Append(t *testing.T) {
 	oscAddress := "/address"
 	message := NewMessage(oscAddress)
 	if message.Address != oscAddress {
@@ -209,7 +209,6 @@ func TestServerMessageReceiving(t *testing.T) {
 		if msg.Arguments[1].(int32) != 3344 {
 			t.Error("Argument should be 3344 and is: " + string(msg.Arguments[1].(int32)))
 		}
-
 		if addr == nil {
 			t.Error("addr was empty")
 		}
@@ -273,7 +272,6 @@ func TestReadTimeout(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		var ctx context.Context
 		timeout := 100 * time.Millisecond
 
 		server := &Server{}
@@ -284,23 +282,25 @@ func TestReadTimeout(t *testing.T) {
 		defer c.Close()
 
 		start <- true
-		ctx, _ = context.WithTimeout(context.Background(), timeout)
+		ctx, _ := context.WithTimeout(context.Background(), timeout)
 		p, addr, err := server.ReceivePacket(ctx, c)
 		if err != nil {
-			t.Errorf("Server error: %v", err)
+			t.Errorf("server error: %v", err)
 			return
 		}
 		if got, want := p.(*Message).Address, "/address/test1"; got != want {
-			t.Errorf("Wrong address; got = %s want = %s", got, want)
+			t.Errorf("wrong address; got = %s, want = %s", got, want)
+			return
 		}
 		if addr == nil {
-			t.Errorf("Addr was nil")
+			t.Errorf("addr was nil")
+			return
 		}
 
 		// Second receive should time out since client is delayed 150 milliseconds
 		ctx, _ = context.WithTimeout(context.Background(), timeout)
 		if _, _, err = server.ReceivePacket(ctx, c); err == nil {
-			t.Errorf("Expected error")
+			t.Errorf("expected error")
 			return
 		}
 
@@ -308,14 +308,16 @@ func TestReadTimeout(t *testing.T) {
 		ctx, _ = context.WithTimeout(context.Background(), timeout)
 		p, addr, err = server.ReceivePacket(ctx, c)
 		if err != nil {
-			t.Errorf("Server error: %v", err)
+			t.Errorf("server error: %v", err)
 			return
 		}
 		if got, want := p.(*Message).Address, "/address/test2"; got != want {
-			t.Errorf("Wrong address; got = %s, want = %s", got, want)
+			t.Errorf("wrong address; got = %s, want = %s", got, want)
+			return
 		}
 		if addr == nil {
-			t.Errorf("Addr was nil")
+			t.Errorf("addr was nil")
+			return
 		}
 	}()
 
