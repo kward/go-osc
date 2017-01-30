@@ -92,40 +92,21 @@ func TestWritePaddedString(t *testing.T) {
 }
 
 func TestPadBytesNeeded(t *testing.T) {
-	var n int
-	n = padBytesNeeded(4)
-	if n != 4 {
-		t.Errorf("Number of pad bytes should be 4 and is: %d", n)
-	}
-
-	n = padBytesNeeded(3)
-	if n != 1 {
-		t.Errorf("Number of pad bytes should be 1 and is: %d", n)
-	}
-
-	n = padBytesNeeded(1)
-	if n != 3 {
-		t.Errorf("Number of pad bytes should be 3 and is: %d", n)
-	}
-
-	n = padBytesNeeded(0)
-	if n != 4 {
-		t.Errorf("Number of pad bytes should be 4 and is: %d", n)
-	}
-
-	n = padBytesNeeded(32)
-	if n != 4 {
-		t.Errorf("Number of pad bytes should be 4 and is: %d", n)
-	}
-
-	n = padBytesNeeded(63)
-	if n != 1 {
-		t.Errorf("Number of pad bytes should be 1 and is: %d", n)
-	}
-
-	n = padBytesNeeded(10)
-	if n != 2 {
-		t.Errorf("Number of pad bytes should be 2 and is: %d", n)
+	for _, tt := range []struct {
+		have, need int
+	}{
+		{0, 4},
+		{1, 3},
+		{3, 1},
+		{4, 4},
+		{10, 2},
+		{32, 4},
+		{63, 1},
+	} {
+		if got, want := padBytesNeeded(tt.have), tt.need; got != want {
+			t.Errorf("padBytesNeeded(%d) = %d, want %d", tt.have, got, want)
+			continue
+		}
 	}
 }
 

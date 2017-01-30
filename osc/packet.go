@@ -12,7 +12,7 @@ type Packet interface {
 	encoding.BinaryMarshaler
 
 	// Addr returns the source address of the packet.
-	Addr() net.Addr
+	Addr() string
 	// SetAddr sets the source address of the packet.
 	SetAddr(net.Addr)
 }

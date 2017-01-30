@@ -127,9 +127,6 @@ func TestMessageReceiving(t *testing.T) {
 		if msg.Arguments[1].(int32) != 3344 {
 			t.Error("Argument should be 3344 and is: " + string(msg.Arguments[1].(int32)))
 		}
-		if msg.Addr() == nil {
-			t.Error("addr was empty")
-		}
 
 		c.Close()
 		finish <- true
@@ -210,10 +207,6 @@ func TestReadTimeout(t *testing.T) {
 			t.Errorf("wrong address; got = %s, want = %s", got, want)
 			return
 		}
-		if p.Addr() == nil {
-			t.Errorf("addr was nil")
-			return
-		}
 
 		// Second receive should time out since client is delayed 150 milliseconds
 		ctx, _ = context.WithTimeout(context.Background(), timeout)
@@ -231,10 +224,6 @@ func TestReadTimeout(t *testing.T) {
 		}
 		if got, want := p.(*Message).Address, "/address/test2"; got != want {
 			t.Errorf("wrong address; got = %s, want = %s", got, want)
-			return
-		}
-		if p.Addr() == nil {
-			t.Errorf("addr was nil")
 			return
 		}
 	}()

@@ -19,7 +19,7 @@ type Bundle struct {
 	Timetag  Timetag
 	Messages []*Message
 	Bundles  []*Bundle
-	addr     net.Addr // Source address of packet.
+	addr     string // Source address of packet.
 }
 
 // Verify that interfaces are implemented properly.
@@ -32,15 +32,10 @@ func NewBundle(time time.Time) *Bundle {
 }
 
 // Addr implements the Packet interface.
-func (b *Bundle) Addr() net.Addr {
-	if b.addr == nil {
-		return net.Addr{}
-	}
-	return b.addr
-}
+func (b *Bundle) Addr() string { return b.addr }
 
 // SetAddr implements the Packet interface.
-func (b *Bundle) SetAddr(addr net.Addr) { b.addr = addr }
+func (b *Bundle) SetAddr(addr net.Addr) { b.addr = addr.String() }
 
 // Append appends a Packet to the bundle.
 func (b *Bundle) Append(pck Packet) error {

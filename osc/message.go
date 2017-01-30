@@ -17,7 +17,7 @@ import (
 type Message struct {
 	Address   string
 	Arguments []interface{}
-	addr      net.Addr // Source address of packet.
+	addr      string // Source address of packet.
 }
 
 // Verify that interfaces are implemented properly.
@@ -29,15 +29,10 @@ func NewMessage(addr string, args ...interface{}) *Message {
 }
 
 // Addr implements the Packet interface.
-func (msg *Message) Addr() net.Addr {
-	if msg.addr == nil {
-		return net.Addr{}
-	}
-	return msg.addr
-}
+func (msg *Message) Addr() string { return msg.addr }
 
 // SetAddr implements the Packet interface.
-func (msg *Message) SetAddr(addr net.Addr) { msg.addr = addr }
+func (msg *Message) SetAddr(addr net.Addr) { msg.addr = addr.String() }
 
 // Append appends the given arguments to the arguments list.
 func (msg *Message) Append(args ...interface{}) {
