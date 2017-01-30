@@ -80,4 +80,4 @@ OSC server example:
 
 	server.ListenAndServe()
 */
-package osc
+package osc // import "github.com/kward/go-osc/osc"
