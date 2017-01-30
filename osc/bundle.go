@@ -1,6 +1,7 @@
 package osc
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
@@ -31,7 +32,12 @@ func NewBundle(time time.Time) *Bundle {
 }
 
 // Addr implements the Packet interface.
-func (b *Bundle) Addr() net.Addr { return b.addr }
+func (b *Bundle) Addr() net.Addr {
+	if b.addr == nil {
+		return net.Addr{}
+	}
+	return b.addr
+}
 
 // SetAddr implements the Packet interface.
 func (b *Bundle) SetAddr(addr net.Addr) { b.addr = addr }
@@ -109,4 +115,48 @@ func (b *Bundle) MarshalBinary() ([]byte, error) {
 	}
 
 	return data.Bytes(), nil
+}
+
+// readBundle reads an Bundle from reader.
+func readBundle(reader *bufio.Reader, start *int, end int) (*Bundle, error) {
+	// Read the '#bundle' OSC string
+	startTag, n, err := readPaddedString(reader)
+	if err != nil {
+		return nil, err
+	}
+	*start += n
+
+	if startTag != bundleTag {
+		return nil, fmt.Errorf("Invalid bundle start tag: %s", startTag)
+	}
+
+	// Read the timetag
+	var timeTag uint64
+	if err := binary.Read(reader, binary.BigEndian, &timeTag); err != nil {
+		return nil, err
+	}
+	*start += 8
+
+	// Create a new bundle
+	bundle := NewBundle(timetagToTime(timeTag))
+
+	// Read until the end of the buffer
+	for *start < end {
+		// Read the size of the bundle element
+		var length int32
+		if err := binary.Read(reader, binary.BigEndian, &length); err != nil {
+			return nil, err
+		}
+		*start += 4
+
+		pkt, err := readPacket(reader, start, end)
+		if err != nil {
+			return nil, err
+		}
+		if err = bundle.Append(pkt); err != nil {
+			return nil, err
+		}
+	}
+
+	return bundle, nil
 }

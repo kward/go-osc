@@ -7,6 +7,51 @@ import (
 	"testing"
 )
 
+func TestParsePacket(t *testing.T) {
+	for _, tt := range []struct {
+		desc string
+		msg  string
+		pkt  Packet
+		ok   bool
+	}{
+		{"no_args",
+			"/a/b/c" + nulls(2) + "," + nulls(3),
+			makePacket("/a/b/c", nil),
+			true},
+		{"string_arg",
+			"/d/e/f" + nulls(2) + ",s" + nulls(2) + "foo" + nulls(1),
+			makePacket("/d/e/f", []string{"foo"}),
+			true},
+		{"empty", "", nil, false},
+	} {
+		pkt, err := ParsePacket(tt.msg)
+		if err != nil && tt.ok {
+			t.Errorf("%s: ParsePacket() returned unexpected error; %s", tt.desc, err)
+		}
+		if err == nil && !tt.ok {
+			t.Errorf("%s: ParsePacket() expected error", tt.desc)
+		}
+		if !tt.ok {
+			continue
+		}
+
+		pktBytes, err := pkt.MarshalBinary()
+		if err != nil {
+			t.Errorf("%s: failure converting pkt to byte array; %s", tt.desc, err)
+			continue
+		}
+		ttpktBytes, err := tt.pkt.MarshalBinary()
+		if err != nil {
+			t.Errorf("%s: failure converting tt.pkt to byte array; %s", tt.desc, err)
+			continue
+		}
+		if got, want := pktBytes, ttpktBytes; !reflect.DeepEqual(got, want) {
+			t.Errorf("%s: ParsePacket() as bytes = '%s', want = '%s'", tt.desc, got, want)
+			continue
+		}
+	}
+}
+
 func TestReadPaddedString(t *testing.T) {
 	for _, tt := range []struct {
 		buf []byte // buffer
@@ -81,51 +126,6 @@ func TestPadBytesNeeded(t *testing.T) {
 	n = padBytesNeeded(10)
 	if n != 2 {
 		t.Errorf("Number of pad bytes should be 2 and is: %d", n)
-	}
-}
-
-func TestParsePacket(t *testing.T) {
-	for _, tt := range []struct {
-		desc string
-		msg  string
-		pkt  Packet
-		ok   bool
-	}{
-		{"no_args",
-			"/a/b/c" + nulls(2) + "," + nulls(3),
-			makePacket("/a/b/c", nil),
-			true},
-		{"string_arg",
-			"/d/e/f" + nulls(2) + ",s" + nulls(2) + "foo" + nulls(1),
-			makePacket("/d/e/f", []string{"foo"}),
-			true},
-		{"empty", "", nil, false},
-	} {
-		pkt, err := ParsePacket(tt.msg)
-		if err != nil && tt.ok {
-			t.Errorf("%s: ParsePacket() returned unexpected error; %s", tt.desc, err)
-		}
-		if err == nil && !tt.ok {
-			t.Errorf("%s: ParsePacket() expected error", tt.desc)
-		}
-		if !tt.ok {
-			continue
-		}
-
-		pktBytes, err := pkt.MarshalBinary()
-		if err != nil {
-			t.Errorf("%s: failure converting pkt to byte array; %s", tt.desc, err)
-			continue
-		}
-		ttpktBytes, err := tt.pkt.MarshalBinary()
-		if err != nil {
-			t.Errorf("%s: failure converting tt.pkt to byte array; %s", tt.desc, err)
-			continue
-		}
-		if got, want := pktBytes, ttpktBytes; !reflect.DeepEqual(got, want) {
-			t.Errorf("%s: ParsePacket() as bytes = '%s', want = '%s'", tt.desc, got, want)
-			continue
-		}
 	}
 }
 

@@ -1,11 +1,15 @@
 package osc
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
 	"reflect"
+	"regexp"
+	"strings"
 )
 
 // Message represents a single OSC message. An OSC message consists of an OSC
@@ -25,7 +29,12 @@ func NewMessage(addr string, args ...interface{}) *Message {
 }
 
 // Addr implements the Packet interface.
-func (msg *Message) Addr() net.Addr { return msg.addr }
+func (msg *Message) Addr() net.Addr {
+	if msg.addr == nil {
+		return net.Addr{}
+	}
+	return msg.addr
+}
 
 // SetAddr implements the Packet interface.
 func (msg *Message) SetAddr(addr net.Addr) { msg.addr = addr }
@@ -217,6 +226,27 @@ func (msg *Message) MarshalBinary() ([]byte, error) {
 	return data.Bytes(), nil
 }
 
+// getRegEx compiles and returns a regular expression object for the given
+// address `pattern`.
+func getRegEx(pattern string) *regexp.Regexp {
+	for _, trs := range []struct {
+		old, new string
+	}{
+		{".", `\.`}, // Escape all '.' in the pattern
+		{"(", `\(`}, // Escape all '(' in the pattern
+		{")", `\)`}, // Escape all ')' in the pattern
+		{"*", ".*"}, // Replace a '*' with '.*' that matches zero or more chars
+		{"{", "("},  // Change a '{' to '('
+		{",", "|"},  // Change a ',' to '|'
+		{"}", ")"},  // Change a '}' to ')'
+		{"?", "."},  // Change a '?' to '.'
+	} {
+		pattern = strings.Replace(pattern, trs.old, trs.new, -1)
+	}
+
+	return regexp.MustCompile(pattern)
+}
+
 // getTypeTag returns the OSC type tag for the given argument.
 func getTypeTag(arg interface{}) (string, error) {
 	switch t := arg.(type) {
@@ -244,4 +274,175 @@ func getTypeTag(arg interface{}) (string, error) {
 	default:
 		return "", fmt.Errorf("Unsupported type: %T", t)
 	}
+}
+
+// readMessage from `reader`.
+func readMessage(reader *bufio.Reader, start *int) (*Message, error) {
+	// First, read the OSC address
+	addr, n, err := readPaddedString(reader)
+	if err != nil {
+		return nil, err
+	}
+	*start += n
+
+	// Read all arguments
+	msg := NewMessage(addr)
+	if err = readArguments(msg, reader, start); err != nil {
+		return nil, err
+	}
+
+	return msg, nil
+}
+
+// readArguments from `reader` and add them to the OSC message `msg`.
+func readArguments(msg *Message, reader *bufio.Reader, start *int) error {
+	// Read the type tag string
+	var n int
+	typetags, n, err := readPaddedString(reader)
+	if err != nil {
+		return err
+	}
+	*start += n
+
+	// If the typetag doesn't start with ',', it's not valid
+	if typetags[0] != ',' {
+		return errors.New("unsupported type tag string")
+	}
+
+	// Remove ',' from the type tag
+	typetags = typetags[1:]
+
+	for _, c := range typetags {
+		switch c {
+		default:
+			return fmt.Errorf("unsupported type tag: %c", c)
+
+		case 'i': // int32
+			var i int32
+			if err = binary.Read(reader, binary.BigEndian, &i); err != nil {
+				return err
+			}
+			*start += 4
+			msg.Append(i)
+
+		case 'h': // int64
+			var i int64
+			if err = binary.Read(reader, binary.BigEndian, &i); err != nil {
+				return err
+			}
+			*start += 8
+			msg.Append(i)
+
+		case 'f': // float32
+			var f float32
+			if err = binary.Read(reader, binary.BigEndian, &f); err != nil {
+				return err
+			}
+			*start += 4
+			msg.Append(f)
+
+		case 'd': // float64/double
+			var d float64
+			if err = binary.Read(reader, binary.BigEndian, &d); err != nil {
+				return err
+			}
+			*start += 8
+			msg.Append(d)
+
+		case 's': // string
+			// TODO: fix reading string value
+			var s string
+			if s, _, err = readPaddedString(reader); err != nil {
+				return err
+			}
+			*start += len(s) + padBytesNeeded(len(s))
+			msg.Append(s)
+
+		case 'b': // blob
+			var buf []byte
+			var n int
+			if buf, n, err = readBlob(reader); err != nil {
+				return err
+			}
+			*start += n
+			msg.Append(buf)
+
+		case 't': // OSC time tag
+			var tt uint64
+			if err = binary.Read(reader, binary.BigEndian, &tt); err != nil {
+				return nil
+			}
+			*start += 8
+			msg.Append(NewTimetagFromTimetag(tt))
+
+		case 'T': // true
+			msg.Append(true)
+
+		case 'F': // false
+			msg.Append(false)
+		}
+	}
+
+	return nil
+}
+
+////
+// De/Encoding functions
+////
+
+// readBlob reads an OSC blob from the blob byte array. Padding bytes are
+// removed from the reader and not returned.
+func readBlob(reader *bufio.Reader) ([]byte, int, error) {
+	// First, get the length
+	var blobLen int
+	if err := binary.Read(reader, binary.BigEndian, &blobLen); err != nil {
+		return nil, 0, err
+	}
+	n := 4 + blobLen
+
+	// Read the data
+	blob := make([]byte, blobLen)
+	if _, err := reader.Read(blob); err != nil {
+		return nil, 0, err
+	}
+
+	// Remove the padding bytes
+	numPadBytes := padBytesNeeded(blobLen)
+	if numPadBytes > 0 {
+		n += numPadBytes
+		dummy := make([]byte, numPadBytes)
+		if _, err := reader.Read(dummy); err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return blob, n, nil
+}
+
+// writeBlob writes the data byte array as an OSC blob into buff. If the length
+// of data isn't 32-bit aligned, padding bytes will be added.
+func writeBlob(data []byte, buf *bytes.Buffer) (int, error) {
+	// Add the size of the blob
+	dlen := int32(len(data))
+	if err := binary.Write(buf, binary.BigEndian, dlen); err != nil {
+		return 0, err
+	}
+
+	// Write the data
+	if _, err := buf.Write(data); err != nil {
+		return 0, nil
+	}
+
+	// Add padding bytes if necessary
+	numPadBytes := padBytesNeeded(len(data))
+	if numPadBytes > 0 {
+		padBytes := make([]byte, numPadBytes)
+		n, err := buf.Write(padBytes)
+		if err != nil {
+			return 0, err
+		}
+		numPadBytes = n
+	}
+
+	return 4 + len(data) + numPadBytes, nil
 }

@@ -12,6 +12,22 @@ import (
 	"time"
 )
 
+// Handler is an interface for message handlers. Every handler implementation
+// for an OSC message must implement this interface.
+type Handler interface {
+	HandleMessage(msg *Message)
+}
+
+// HandlerFunc implements the Handler interface. Type definition for an OSC
+// handler function.
+type HandlerFunc func(msg *Message)
+
+// HandleMessage calls itself with the given OSC Message. Implements the
+// Handler interface.
+func (f HandlerFunc) HandleMessage(msg *Message) {
+	f(msg)
+}
+
 // incoming OSC packets and bundles.
 type Server struct {
 	opts       *serverOptions
