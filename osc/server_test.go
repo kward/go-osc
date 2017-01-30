@@ -1,11 +1,12 @@
 package osc
 
 import (
-	"context"
 	"net"
 	"sync"
 	"testing"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 func TestHandle(t *testing.T) {
