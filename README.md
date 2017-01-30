@@ -1,11 +1,11 @@
 # GoOSC
 
-[Open Sound Control (OSC)](http://opensoundcontrol.org/introduction-osc) library for Golang. Implemented in pure Go.
+[Open Sound Control (OSC)](http://opensoundcontrol.org/introduction-osc)
+library for Golang. Implemented in pure Go.
 
 * Build Status:  [![Build Status][CIStatus]][CIProject]
 * Documentation: [![GoDoc][GoDocStatus]][GoDoc]
-* Views:         [![Views][SGViews]][SGProject] [![views_24h][SGViews24h]][SGProject]
-* Users:         [![library users][SGUsers]][SGProject] [![dependents][SGDependents]][SGProject]
+* Source Graph:  [[Source Graph][SGProject]]
 
 ## Features
   * OSC Bundles, including timetags
@@ -74,7 +74,3 @@ This library was forked from https://github.com/hypebeast/go-osc so that the Tra
 [GoDocStatus]: https://godoc.org/github.com/kward/go-osc?status.svg
 
 [SGProject]: https://sourcegraph.com/github.com/kward/go-osc
-[SGDependents]: https://sourcegraph.com/api/repos/github.com/kward/go-osc/.badges/dependents.svg
-[SGUsers]: https://sourcegraph.com/api/repos/github.com/kward/go-osc/.badges/library-users.svg
-[SGViews]: https://sourcegraph.com/api/repos/github.com/kward/go-osc/.counters/views.svg
-[SGViews24h]: https://sourcegraph.com/api/repos/github.com/kward/go-osc/.counters/views-24h.svg?no-count=1
