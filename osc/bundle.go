@@ -112,6 +112,11 @@ func (b *Bundle) MarshalBinary() ([]byte, error) {
 	return data.Bytes(), nil
 }
 
+// String implements the fmt.Stringer interface.
+func (b *Bundle) String() string {
+	return "Bundle.String() unimplemented"
+}
+
 // readBundle reads an Bundle from reader.
 func readBundle(reader *bufio.Reader, start *int, end int) (*Bundle, error) {
 	// Read the '#bundle' OSC string

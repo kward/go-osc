@@ -67,7 +67,49 @@ func (msg *Message) Match(addr string) bool {
 	return false
 }
 
-// TypeTags returns the type tag string.
+// String implements the fmt.Stringer interface.
+func (msg *Message) String() string {
+	if msg == nil {
+		return ""
+	}
+
+	var args []interface{}
+
+	format := "%s %s"
+	args = append(args, msg.Address)
+
+	tags, err := msg.TypeTags()
+	if err != nil {
+		args = append(args, "(invalid type tags)")
+		return fmt.Sprintf(format, args...)
+	}
+	args = append(args, tags)
+
+	for _, arg := range msg.Arguments {
+		switch arg.(type) {
+		case bool, int32, int64, float32, float64, string:
+			format += " %v"
+			args = append(args, arg)
+
+		case nil:
+			format += " %s"
+			args = append(args, "Nil")
+
+		case []byte:
+			format += " %s"
+			args = append(args, "blob")
+
+		case Timetag:
+			format += " %d"
+			timeTag := arg.(Timetag)
+			args = append(args, timeTag.TimeTag())
+		}
+	}
+
+	return fmt.Sprintf(format, args...)
+}
+
+// typeTags returns the type tag string.
 func (msg *Message) TypeTags() (string, error) {
 	if msg == nil {
 		return "", fmt.Errorf("message is nil")
@@ -83,46 +125,6 @@ func (msg *Message) TypeTags() (string, error) {
 	}
 
 	return tags, nil
-}
-
-// String implements the fmt.Stringer interface.
-func (msg *Message) String() string {
-	if msg == nil {
-		return ""
-	}
-
-	tags, err := msg.TypeTags()
-	if err != nil {
-		return ""
-	}
-
-	formatString := "%s %s"
-	var args []interface{}
-	args = append(args, msg.Address)
-	args = append(args, tags)
-
-	for _, arg := range msg.Arguments {
-		switch arg.(type) {
-		case bool, int32, int64, float32, float64, string:
-			formatString += " %v"
-			args = append(args, arg)
-
-		case nil:
-			formatString += " %s"
-			args = append(args, "Nil")
-
-		case []byte:
-			formatString += " %s"
-			args = append(args, "blob")
-
-		case Timetag:
-			formatString += " %d"
-			timeTag := arg.(Timetag)
-			args = append(args, timeTag.TimeTag())
-		}
-	}
-
-	return fmt.Sprintf(formatString, args...)
 }
 
 // CountArguments returns the number of arguments.

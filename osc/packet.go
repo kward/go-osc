@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"encoding"
+	"fmt"
 	"net"
 )
 
 // Packet is the interface for Message and Bundle.
 type Packet interface {
 	encoding.BinaryMarshaler
+	fmt.Stringer
 
 	// Addr returns the source address of the packet.
 	Addr() string
