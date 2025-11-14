@@ -3,9 +3,8 @@
 [Open Sound Control (OSC)](http://opensoundcontrol.org/introduction-osc)
 library for Golang. Implemented in pure Go.
 
-* Build Status:  [![Build Status][CIStatus]][CIProject]
+* Build Status:  [![CI Status][CIStatus]][CIProject]
 * Documentation: [![GoDoc][GoDocStatus]][GoDoc]
-* Source Graph:  [[Source Graph][SGProject]]
 
 ## Features
   * OSC Bundles, including timetags
@@ -47,14 +46,17 @@ func main() {
 ```go
 package main
 
-import osc "github.com/kward/go-osc"
+import "github.com/kward/go-osc/osc"
 
 func main() {
   addr := "127.0.0.1:8765"
-  server := &osc.Server{Addr: addr}
+  server, err := osc.NewServer(addr)
+  if err != nil {
+    panic(err)
+  }
 
   server.Handle("/message/address", func(msg *osc.Message) {
-    osc.PrintMessage(msg)
+    println(msg.String())
   })
 
   server.ListenAndServe()
@@ -62,15 +64,13 @@ func main() {
 ```
 
 ## Misc
-This library was forked from https://github.com/hypebeast/go-osc so that the Travis continuous integration could be fixed, enabling it to be imported into other projects that use Travis CI.
+This library was forked from https://github.com/hypebeast/go-osc to modernize the codebase with Go modules, GitHub Actions CI/CD, and updated dependencies.
 
 
 <!--- Links -->
 
-[CIProject]: https://travis-ci.org/kward/go-osc
-[CIStatus]: https://travis-ci.org/kward/go-osc.png?branch=master
+[CIProject]: https://github.com/kward/go-osc/actions
+[CIStatus]: https://github.com/kward/go-osc/workflows/CI/badge.svg
 
-[GoDoc]: https://godoc.org/github.com/kward/go-osc
-[GoDocStatus]: https://godoc.org/github.com/kward/go-osc?status.svg
-
-[SGProject]: https://sourcegraph.com/github.com/kward/go-osc
+[GoDoc]: https://godoc.org/github.com/kward/go-osc/osc
+[GoDocStatus]: https://godoc.org/github.com/kward/go-osc/osc?status.svg

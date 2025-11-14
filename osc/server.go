@@ -4,13 +4,12 @@ package osc
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"strings"
 	"time"
-
-	"golang.org/x/net/context"
 )
 
 // Handler is an interface for message handlers. Every handler implementation

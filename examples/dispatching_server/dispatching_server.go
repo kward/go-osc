@@ -1,13 +1,20 @@
 package main
 
-import "github.com/hypebeast/go-osc/osc"
+import (
+	"fmt"
+
+	"github.com/kward/go-osc/osc"
+)
 
 func main() {
 	addr := "127.0.0.1:8000"
-	server := &osc.Server{Addr: addr}
+	server, err := osc.NewServer(addr)
+	if err != nil {
+		panic(err)
+	}
 
 	server.Handle("/message/address", func(msg *osc.Message) {
-		osc.PrintMessage(msg)
+		fmt.Println(msg)
 	})
 
 	server.ListenAndServe()

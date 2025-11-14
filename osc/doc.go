@@ -19,7 +19,7 @@ Features:
   'd' (Double/int64), 'T' (True), 'F' (False), 'N' (Nil) types.
 - OSC bundles, including timetags
 - Support for OSC address pattern including '*', '?', '{,}' and '[]' wildcards
-- TODO: Describe registering methods
+- Message dispatching with pattern matching via server.Handle()
 
 This OSC implementation uses the UDP protocol for sending and receiving
 OSC packets.
@@ -68,7 +68,7 @@ OSC client example:
 OSC server example:
 
 	addr := "127.0.0.1:8765"
-	server, err := &osc.NewServer(addr)
+	server, err := osc.NewServer(addr)
 	if err != nil {
 		fmt.Printf("Unable to instantiate the OSC server; %s", err)
 		os.Exit(1)

@@ -150,13 +150,12 @@ func (msg *Message) MarshalBinary() ([]byte, error) {
 	// Process the type tags and collect all arguments
 	payload := new(bytes.Buffer)
 	for _, arg := range msg.Arguments {
-		// FIXME: Use t instead of arg
 		switch t := arg.(type) {
 		default:
 			return nil, fmt.Errorf("OSC - unsupported type: %T", t)
 
 		case bool:
-			if arg.(bool) == true {
+			if t {
 				typetags = append(typetags, 'T')
 			} else {
 				typetags = append(typetags, 'F')
@@ -203,8 +202,7 @@ func (msg *Message) MarshalBinary() ([]byte, error) {
 
 		case Timetag:
 			typetags = append(typetags, 't')
-			timeTag := arg.(Timetag)
-			if _, err := payload.Write(timeTag.ToByteArray()); err != nil {
+			if _, err := payload.Write(t.ToByteArray()); err != nil {
 				return nil, err
 			}
 		}
@@ -347,12 +345,12 @@ func readArguments(msg *Message, reader *bufio.Reader, start *int) error {
 			msg.Append(d)
 
 		case 's': // string
-			// TODO: fix reading string value
 			var s string
-			if s, _, err = readPaddedString(reader); err != nil {
+			var n int
+			if s, n, err = readPaddedString(reader); err != nil {
 				return err
 			}
-			*start += len(s) + padBytesNeeded(len(s))
+			*start += n
 			msg.Append(s)
 
 		case 'b': // blob

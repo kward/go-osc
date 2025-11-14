@@ -8,10 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hypebeast/go-osc/osc"
+	"github.com/kward/go-osc/osc"
 )
 
-// TODO: Revise the client!
 func main() {
 	ip := "localhost"
 	port := 9000

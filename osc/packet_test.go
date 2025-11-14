@@ -70,7 +70,7 @@ func TestReadPaddedString(t *testing.T) {
 			t.Errorf("%s: Bytes needed don't match; got = %d, want = %d", tt.s, got, want)
 		}
 		if got, want := s, tt.s; got != want {
-			t.Errorf("%s: Strings don't match; got = %d, want = %d", tt.s, got, want)
+			t.Errorf("%s: Strings don't match; got = %s, want = %s", tt.s, got, want)
 		}
 	}
 }
@@ -83,11 +83,11 @@ func TestWritePaddedString(t *testing.T) {
 
 	n, err := writePaddedString(testString, bytesBuffer)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("Error writing padded string: %s", err.Error())
 	}
 
 	if n != expectedNumberOfWrittenBytes {
-		t.Errorf("Expected number of written bytes should be \"%d\" and is \"%d\"", expectedNumberOfWrittenBytes, n)
+		t.Errorf("Expected number of written bytes should be %d and is %d", expectedNumberOfWrittenBytes, n)
 	}
 }
 

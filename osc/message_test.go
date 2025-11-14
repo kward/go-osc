@@ -58,7 +58,7 @@ func TestTypeTags(t *testing.T) {
 			continue
 		}
 		if err == nil && !tt.ok {
-			t.Errorf("%s: TypeTags() expected an error")
+			t.Errorf("%s: TypeTags() expected an error", tt.desc)
 			continue
 		}
 		if !tt.ok {

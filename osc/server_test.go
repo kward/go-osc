@@ -1,12 +1,11 @@
 package osc
 
 import (
+	"context"
 	"net"
 	"sync"
 	"testing"
 	"time"
-
-	"golang.org/x/net/context"
 )
 
 func TestHandle(t *testing.T) {
@@ -49,11 +48,11 @@ func TestMessageDispatching(t *testing.T) {
 		}
 		err = server.Handle("/address/test", func(msg *Message) {
 			if len(msg.Arguments) != 1 {
-				t.Error("Argument length should be 1 and is: " + string(len(msg.Arguments)))
+				t.Errorf("Argument length should be 1 and is: %d", len(msg.Arguments))
 			}
 
 			if msg.Arguments[0].(int32) != 1122 {
-				t.Error("Argument should be 1122 and is: " + string(msg.Arguments[0].(int32)))
+				t.Errorf("Argument should be 1122 and is: %d", msg.Arguments[0].(int32))
 			}
 
 			// Stop OSC server

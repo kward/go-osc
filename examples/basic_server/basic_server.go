@@ -3,52 +3,37 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"net"
 	"os"
 
-	"github.com/hypebeast/go-osc/osc"
+	"github.com/kward/go-osc/osc"
 )
 
 func main() {
 	addr := "127.0.0.1:8000"
-	server := &osc.Server{}
-	conn, err := net.ListenPacket("udp", addr)
+	server, err := osc.NewServer(addr)
 	if err != nil {
-		fmt.Println("Couldn't listen: ", err)
+		fmt.Println("Error creating server:", err)
+		os.Exit(1)
 	}
-	defer conn.Close()
 
 	fmt.Println("### Welcome to go-osc receiver demo")
 	fmt.Println("Press \"q\" to exit")
 
+	// Add a catch-all handler that prints all incoming messages
+	err = server.Handle("/", func(msg *osc.Message) {
+		fmt.Println("-- OSC Message:", msg)
+	})
+	if err != nil {
+		fmt.Println("Error adding handler:", err)
+		os.Exit(1)
+	}
+
+	// Start the server in a goroutine
 	go func() {
 		fmt.Println("Start listening on", addr)
-
-		for {
-			packet, err := server.ReceivePacket(conn)
-			if err != nil {
-				fmt.Println("Server error: " + err.Error())
-				os.Exit(1)
-			}
-
-			if packet != nil {
-				switch packet.(type) {
-				default:
-					fmt.Println("Unknow packet type!")
-
-				case *osc.Message:
-					fmt.Printf("-- OSC Message: ")
-					osc.PrintMessage(packet.(*osc.Message))
-
-				case *osc.Bundle:
-					fmt.Println("-- OSC Bundle:")
-					bundle := packet.(*osc.Bundle)
-					for i, message := range bundle.Messages {
-						fmt.Printf("  -- OSC Message #%d: ", i+1)
-						osc.PrintMessage(message)
-					}
-				}
-			}
+		if err := server.ListenAndServe(); err != nil {
+			fmt.Println("Server error:", err)
+			os.Exit(1)
 		}
 	}()
 
